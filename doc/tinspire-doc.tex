@@ -1,0 +1,300 @@
+\PassOptionsToPackage{colaction}{multicol}
+\PassOptionsToPackage{table}{xcolor}
+\documentclass[a4paper,add-index]{cnltx-doc}
+%\documentclass[11pt, a4paper]{scrartcl}
+
+%% Deutsche Sprache
+\usepackage[ngerman]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[TS1,T1]{fontenc}
+
+%% Dokumentiertes Paket
+\usepackage{tinspire}
+
+%% Zusatztools
+\usepackage{xinttools,xintfrac}
+\usepackage[pdftex]{hyperref}
+\usepackage{pdfpages}
+\usepackage{prettyref}
+
+\setcnltx{
+	name     = tinspire ,
+	title    = tinspire.sty ,
+	version  = 0.1 ,
+	date     = 2018-12-18 ,
+	subtitle = {\LaTeX-Paket zum setzen von TI-Nspire Tasten.},
+	info     = Paketdokumentation ,
+	authors  = {Jonas Neugebauer} ,
+	email    = schule@neugebauer.cc ,
+	url     = https://ngb.schule ,
+	abstract = {%
+		\LaTeX-Paket zum setzen von TI-Nspire Tasten.
+	} ,
+	index-setup = {othercode=\footnotesize,level=\section},
+}
+
+\newcounter{loopi}
+\newcommand{\makro}[1]{\texttt{\textbackslash #1}}
+
+\newcommand{\home}{{\raise.17ex\hbox{$\scriptstyle\mathtt{\sim}$}}}
+
+\begin{document}
+
+\clearpage
+\begin{center}\Huge \TIN\end{center}
+\part{Verwendung}
+
+\section{Installation}
+Die Datei \texttt{tinspire.sty} muss für \LaTeX\ verfügbar sein. Entweder muss die Datei im selben Ordner liegen wie die \TeX\ Datei, die kompiliert werden soll, oder sie muss in einem Pfad liegen, der beim Übersetzen berücksichtigt wird. Unter macOS und mit MacTeX wäre das zum Beispiel \texttt{\home/Library/texmf/tex}.
+
+\subsection{Voraussetzungen}
+Das Paket setzt hauptsächlich auf \pkg{pgf-tikz} auf, um die Tasten zu zeichnen. Zusätzlich wird \pkg{xcolor} mit der Option \texttt{table} vorausgesetzt (auch wenn die Farben in den Optionen abgeschaltet wurden). Gegebenenfalls muss daher zu Beginn des Dokuments diese Option zusätzlich weitergereicht werden: \cs*{PassOptionsToPackage}\Marg{table}\Marg{xcolor}
+
+Um die Mathematischen Symbole der Tasten zu setzen werden \pkg{amsmath} und \pkg{amssymb} geladen. \pkg{xspace} wird verwendet, um Abstände (Leerzeichen) hinter Tasten dynamisch anzupassen.
+
+\subsection{Optionen}
+\begin{options}
+	\opt{flat}
+	Wenn angegeben werden die Tasten ohne den leichten 3D-Effekt dargestellt, der sonst hinzugefügt wird. Die Tasten erscheinen dadurch flach.
+	\begin{center}
+		\begin{tabular}{ccc}
+			Ohne \option*{flat} & \hspace{1cm} & Mit \option*{flat} \\
+			\TINkey[black,fill=white,text=black]{tab}{} & \hspace{1cm} & 
+				\TINbutton[black,fill=white,text=black]{tab}{} \\
+		\end{tabular}
+	\end{center}
+
+	\opt{borders}
+	Normalerweise wird die \texttt{ctrl}-Taste in Hellblau dargsetllt, wie sie auch auf dem Taschenrechner zu finden ist. Falls keine Farben gedruckt werden, oder die Option \option*{flat} gesetzt ist, dann kann diese Option genutzt werden, um die Taste mit einem deutlichen schwarzen Rahmen darzustellen.
+	\begin{center}
+		\begin{tabular}{ccc}
+			Ohne \option*{borders} & \hspace{1cm} & Mit \option*{borders} \\
+			\TINctrl & \hspace{1cm} & 
+			\TINkey[tinctrl,draw=black]{ctrl}{} \\
+		\end{tabular}
+	\end{center}
+	
+	\keychoice{colors}{off,gray,constrast,\default{default}}\Default{default}
+	Beeinflusst dei Darstellung der Farben des Taschenrechners. Dies betrifft vornehmlich die \texttt{ctrl}-Taste und die Sekundärfunktionen, die auf dem Taschenrechner hellblau gefärbt sind. Standardmäßig entsprechen die Farben ungefähr den echten Tasten, um diese möglichst naturgetreue wiederzugeben. Falls das Dokument aber nicht in Farbe ausgedruckt wird, oder nur am Bildschirm betrachtet werden soll, hat das Hellblau einen schlechten Kontrast. Die anderen möglichen Einstellungen sind:
+	\begin{description}
+		\item[\keyis*-{colors}{default}]\quad 
+		Die Standardfarben des \TIN.
+		\begin{center}
+			\TINon \TINctrl \TINnum{3}
+		\end{center}
+		
+		\item[\keyis*-{colors}{off}]\quad 
+		Schaltet die Farben aus und setzt alle Tasten in Schwarz-Weiß. Alle Tasten werden weiß, mit schwarzer Schrift und schwarzem Rahmen dargestellt.
+		
+		Diese Option impliziert automatisch \option*{borders}.
+		\begin{center}\TINsetcolors{off}
+			\TINon \TINctrl \TINnum{3}
+		\end{center}
+		
+		\item[\keyis*-{colors}{gray}]\quad
+		Alle Farben werden durch Grautöne ersetzt und so gewählt, dass sie im Graustufendruck noch möglichst gut erkennbar sind.
+		\begin{center}\TINsetcolors{gray}
+			\TINon \TINctrl \TINnum{3}
+		\end{center}
+		
+		\item[\keyis*-{colors}{contrast}]\quad
+		Erhöht den Kontrast des Hellblaus, um bei Ausdrücken in Graustufen besser unterscheidbar zu sein, aber auf Bildschirmen immer noch in Farbe dargestellt wird. Dadurch verfälscht sich die Farbe etwas zum Original. Diese Einstellungen ist für die meisten Zwecke wohl am sinnvollsten.
+		\begin{center}\TINsetcolors{contrast}
+			\TINon \TINctrl \TINnum{3}
+		\end{center}
+	\end{description}
+\end{options}
+
+%% Standardfarben wiederherstellen
+\TINsetcolors{default}
+
+\section{Tasten}
+Für alle Tasten des \TIN stellt das Paket ein eigenes Makro zur Verfügung. Die Namen setzen sich aus dem Prefix {\ttfamily TIN} und dem Namen der Taste zusammen. Der Name lässt sich meist aus der Aufschrift der Taste ableiten.
+
+\subsection{Allgemeine Funktionstasten}
+Die Funktionstasten links und rechts neben dem Display haben jeweils eigene Namen.
+\begin{center}
+\begin{tabular}{lc||lc}
+	\xintFor #1 in {esc,on,scratch,doc,tab,menu,ctrl,del,
+		shift,var}
+	\do
+	{\addtocounter{loopi}{1}\xintifOdd{\theloopi}
+			{\cs{TIN#1}\hspace{1cm} & \csname TIN#1\endcsname\hspace{1cm} & \hspace{1cm}}
+			{\cs{TIN#1}\hspace{1cm} & \csname TIN#1\endcsname \\}
+	}
+	&& \hspace{1cm}\cs{TINenter}\hspace{1cm} & \TINenter \\
+\end{tabular}
+\end{center}
+
+Alle Funktionstasten mit einer Sekundärfunktion besitzen eine \sarg-Variente, die die zweite Funktion (oberhalb der Taste) weglässt.
+\begin{center}
+\begin{tabular}{lc||lc}
+	\cs*{TINesc}\sarg\hspace{1cm} &
+	\TINesc*\hspace{1cm} & \hspace{1cm}
+	\cs*{TINon}\sarg\hspace{1cm} & \TINon* \\
+	\cs*{TINscratch}\sarg\hspace{1cm} &
+	\TINscratch*\hspace{1cm} & \hspace{1cm}
+	\cs*{TINdoc}\sarg\hspace{1cm} & 
+	\TINdoc* \\
+	\cs{TINtab}\hspace{1cm} &
+	\TINtab\hspace{1cm} & \hspace{1cm}
+	\cs*{TINmenu}\sarg\hspace{1cm} & 
+	\TINmenu* \\
+	\cs{TINctrl}\hspace{1cm} &
+	\TINctrl\hspace{1cm} & \hspace{1cm}
+	\cs*{TINdel}\sarg\hspace{1cm} & 
+	\TINdel* \\
+	\cs*{TINshift}\sarg\hspace{1cm} &
+	\TINshift*\hspace{1cm} & \hspace{1cm}
+	\cs*{TINvar}\sarg\hspace{1cm} & 
+	\TINvar* \\
+	&& \hspace{1cm}\cs*{TINenter}\sarg\hspace{1cm} & \TINenter* \\
+\end{tabular}
+\end{center}
+
+\subsection{Nummernblock}
+Nummerntasten werden mit dem Makro \cs{TINnum}\marg{num} erstellt. Als Parameter wird die Zahl (0-9) übergeben. Die beiden Funktionstasten für den Dezimalpunkt und die Negation haben wieder eigene Makros.
+\begin{center}
+	\begin{tabular}{lc||lc||lc}
+		\cs*{TINnum}\Marg{1} & \TINnum{1} &
+		\cs*{TINnum}\Marg{2} & \TINnum{2} &
+		\cs*{TINnum}\Marg{3} & \TINnum{3} \\
+		\cs*{TINnum}\Marg{4} & \TINnum{4} &
+		\cs*{TINnum}\Marg{5} & \TINnum{5} &
+		\cs*{TINnum}\Marg{6} & \TINnum{6} \\
+		\cs*{TINnum}\Marg{7} & \TINnum{7} &
+		\cs*{TINnum}\Marg{8} & \TINnum{8} &
+		\cs*{TINnum}\Marg{9} & \TINnum{9} \\
+		\cs*{TINnum}\Marg{0} & \TINnum{0} &
+		\cs*{TINdot} & \TINdot &
+		\cs*{TINneg} & \TINneg \\
+		&&
+		\cs{TINdot}\sarg & \TINdot* &
+		\cs{TINneg}\sarg & \TINneg* \\
+	\end{tabular}
+\end{center}
+
+\subsection{Doppelte Funktionstasten}
+Die zweigeteilten Funktionstasten besitzen jeweils drei Makros. Jeweils eines für die linke und rechte Seite, sowie die Kombination beider Tasten zu einer Doppeltaste. Die Namen setzt sich jeweils aus \texttt{TIN} und einem Bezeichner für die Taste zusammen. Das Doppelmakro setzt sich aus dem Prefix und dem Bezeichner der linken, gefolgt vom Bezeichner der rechten Taste zusammen.
+
+Beispielsweise werden die Plus-Minus-Tasten über der Enter-Taste mit den Makros \cs*{TINplus} und \cs*{TINminus} erzeugt. Die Doppeltaste dann mit \cs*{TINplusminus}.
+\begin{center}
+	\begin{tabular}{lc||lc||lc}
+		\xintForpair #1#2 in {(eq,trig), (s,lib), (pow,sq), (times,div), (ex,tenx), (plus,minus), (lbr,rbr)}
+		\do
+		{\cs{TIN#1} & \csname TIN#1\endcsname &
+		\cs{TIN#2} & \csname TIN#2\endcsname  &
+		\cs{TIN#1#2} & \csname TIN#1#2\endcsname \\
+		}
+	\end{tabular}
+\end{center}
+
+Auch diese Funktionstasten besitzen \sarg-Varianten ohne Sekundärfunktion. Zum Beispiel
+\begin{center}
+	\begin{tabular}{lc||lc||lc}
+		\cs*{TINplus}\sarg & \TINplus* &
+		\cs*{TINminus}\sarg & \TINminus*  &
+		\cs*{TINplusminus}\sarg & \TINplusminus* \\
+	\end{tabular}
+\end{center}
+
+\subsection{Buchstabenblock}
+Buchstabentasten werden mit dem Makro \cs{TINletter}\Marg{letter} erstellt. Als Parameter wird ein Buchstabe (a-w) übergeben. Die drei unbekannten \texttt{x}, \texttt{y} und \texttt{z} besitzen eigene Makros.
+\begin{center}
+	\begin{tabular}{lc||lc||lc}
+		\cs*{TINletter}\Marg{a} & \TINletter{a} &
+		\cs*{TINletter}\Marg{b} & \TINletter{b} &
+		\cs*{TINletter}\Marg{c} & \TINletter{c} \\
+		&& usw... &&& \\
+		\cs{TINx} & \TINx &
+		\cs{TINy} & \TINy &
+		\cs{TINz} & \TINz \\
+	\end{tabular}
+\end{center}
+
+Die weiteren Funktionstasten im Buchstabenblock werden wie folgt erzeugt:
+\begin{center}
+	\begin{tabular}{lc||lc||lc}
+		\xintForthree #1#2#3 in {(ee,pi,comma),(symbols,flag,newline)}
+		\do
+		{\cs{TIN#1} & \csname TIN#1\endcsname &
+			\cs{TIN#2} & \csname TIN#2\endcsname  &
+			\cs{TIN#3} & \csname TIN#3\endcsname \\
+		}
+		&&&& \cs{TINspace} & \TINspace \\
+	\end{tabular}
+\end{center}
+
+\section{Menüs und Eingabefenster}
+\subsection{Auswahlmenüs}
+Die Umgebung \texttt{tinmenu} kann zum Erzeugen von Menüs verwendet werden, die ähnlich zu denen des \TIN aussehen.
+
+Dazu dient die Umgebung \env{tinmenu} und die Makros \cs{TINmenuitem}\sarg und \cs{TINselected}. Das Menü oben wird erzeugt durch den Code:
+\begin{example}
+	\begin{tinmenu}
+		\TINmenuitem*{1: Anzeige}
+		\TINmenuitem*{2: Analysis}
+		\TINselected\TINmenuitem*{3: Algebra}
+		\TINmenuitem{4: Matrizen}
+	\end{tinmenu}
+\end{example}
+
+Die \sarg-Variante von \cs*{TINmenuitem} fügt dem Menüeintrag einen kleinen Pfeil hinzu, als Kennzeichnung für Untermenüs.
+
+\subsection{Textauszeichnungen für Menüpunkte}
+Um Menüpunkte im Fließtext zu kennzeichnen stellt das Paket die Makros \cs*{texttin}\marg{text} und \cs*{texttin}\sarg\marg{text} zur Verfügung. Die \sarg-Variante stellt den Text dar, als wäre er im Menü ausgewählt.
+\begin{center}
+	\begin{tabular}{l|l}
+		\cs*{texttin}\Marg{2: Analysis} & \texttin{2: Analysis} \\
+		\cs*{texttin}\sarg\Marg{2: Analysis} & \texttin*{2: Analysis} \\
+	\end{tabular}
+\end{center}
+
+\subsection{Eingabefenster}
+\emph{Diese Funktion ist noch experimentell und kann noch Änderungen unterliegen.}\medskip
+
+Mit der Umgebung \env{tinwindow} können Eingabefenster gezeichnet werden, die ähnlichkeit zu denen des Taschenrechners haben. Die Darstellung wird durch Tabellen erzeugt und kann daher nicht als Bild exportiert werden.
+\begin{example}
+	\begin{tinwindow}{Wurzeln eines Polynoms}
+		\TINwfield{$a_2$=}
+		\TINwfield{$a_1$=}
+		\TINwfield{$a_0$=}
+		\TINwbtns{OK}{Abbruch}
+	\end{tinwindow}
+\end{example}
+
+\part{Beispiele}
+\subsection{Quadratische Gleichungen lösen}
+\begin{enumerate}
+	\item \TIN anschalten (\TINon*).
+	\item Scratchpad mit \TINscratch* aufrufen.
+	\item \TINmenu* aufrufen und \TINnum{3} drücken (\texttin{3: Algebra}).
+	\item Erneut Menüpunkt \TINnum{3} wählen (\texttin{3: Polynomwerkzeuge}).
+	\item Dann einmal \TINenter* betätigen (oder \TINnum{1} drücken) um die Funktion \texttin{1: Wurzeln eines Polynoms finden...} aufzurufen.
+	\item Im Dialogfenster sollten die passenden Einstellungen schon gewählt sein:
+	\begin{center}
+		\begin{tinwindow}{Wurzeln eines Polynoms finden}
+			\TINwfield[2]{Grad}
+			\TINwfield[Reell]{Wurzeln}
+			\TINwbtns{OK}{Abbruch}
+		\end{tinwindow}
+	\end{center}
+	\item Nach dem Betätigen des OK-Buttons erscheint das Fenster zur Eingabe der Koeffizienten $a$, $b$ und $c$, bzw. hier $a_2$, $a_1$ und $a_0$:
+	\begin{center}
+		\begin{tinwindow}{Wurzeln eines Polynoms}
+			\TINwfield{$a_2$=}
+			\TINwfield{$a_1$=}
+			\TINwfield{$a_0$=}
+			\TINwbtns{OK}{Abbruch}
+		\end{tinwindow}
+	\end{center}
+\end{enumerate}
+
+\subsection{Cheatsheet}
+\begin{tabular}{|c|p{8cm}|} \hline
+	\TINon* & Einschalten des Taschenrechners. \\ \hline
+	\TINscratch* & Aufrufen des \emph{Scratchpads} für schnelle Berechnungen. Ein weiterer Druck wechselt zum Plot-Fenster, in dem schnell Funktionsgraphen geplottet werden können. Jeder weitere Druck wechselt zwischen Rechner und Plot hin und her. \\ \hline
+	\TINmenu* & Aufruf des Taschenrechner-Menüs, welches Kontextabhängig Zugriff auf verschiedene Funktionen gibt. \\ \hline
+\end{tabular}
+
+\end{document}
