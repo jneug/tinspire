@@ -1,0 +1,459 @@
+
+%% -----------------
+%%
+%% Darstellung von Tasten des TI-NSPIRE
+%%
+%% -----------------
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{tinspire}[2018/12/05  Paket zur Darstellung von Tasten des TI-NSPIRE Taschenrechners]
+
+% option keepBorder keeps black border for ctrl key
+% option keepSecondarySpace keeps space for secondary function even if empty
+
+%\RequirePackage{pgfopts}
+% Replace amssymb package? -> draw \square with tikz
+\RequirePackage{amsmath,amssymb}
+\RequirePackage{xspace}
+\PassOptionsToPackage{table}{xcolor}
+\RequirePackage{xcolor}
+\RequirePackage{tikz}
+\RequirePackage{ifthen}
+
+\usetikzlibrary{calc,shadows,backgrounds}
+
+% Paketoptionen
+\newboolean{tin@keepBorder}
+\setboolean{tin@keepBorder}{false}
+\newboolean{tin@flat}
+\setboolean{tin@flat}{false}
+
+\def\tin@colors{default}
+
+\pgfkeys{
+	/tin/.cd,
+	%% Entfernt den Schatten unter Tasten, das sie flach erscheinen
+	flat/.value forbidden,
+	flat/.code=\setboolean{tin@flat}{true},
+	%% Behält einen schwarzen Rand bei der CTRL-Taste bei 
+	borders/.value forbidden,
+	borders/.code=\setboolean{tin@keepBorder}{true},
+	%% Mögliche optionen: off, gray, constrast, default
+	colors/.store in=\tin@colors,
+	.unknown/.code={}, % Unbekannte Optionen ignorieren.
+}
+
+\ProcessPgfPackageOptions{/tin}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%              Style definitions              %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Farbdefinitionen
+\def\TINsetcolors#1{%
+%% Standards werden immer gesetzt
+\definecolor{tinbtnfg}{gray}{1}
+\definecolor{tinbtnbg}{gray}{.1}
+\definecolor{tinclrctrl}{RGB}{214,248,255}
+\definecolor{tinclrctrldraw}{RGB}{214,248,255}
+\definecolor{tinsecondaryclr}{RGB}{131,196,209}
+\definecolor{tinselectionclr}{RGB}{116,186,237}
+\definecolor{tindisplayclr}{gray}{.95}
+%% Spezialfälle überschreiben Standards
+\ifthenelse{\equal{#1}{off}}{%
+	\definecolor{tinbtnfg}{gray}{0}
+	\definecolor{tinbtnbg}{gray}{1}
+	\definecolor{tinclrctrl}{gray}{1}
+	\definecolor{tinclrctrldraw}{gray}{0}
+	\definecolor{tinsecondaryclr}{gray}{0}
+	\definecolor{tinselectionclr}{gray}{.6}
+	\definecolor{tindisplayclr}{gray}{.95}
+}{}%
+\ifthenelse{\equal{#1}{gray}}{%
+	\definecolor{tinclrctrl}{gray}{.75}
+	\definecolor{tinclrctrldraw}{gray}{.75}
+	\definecolor{tinsecondaryclr}{gray}{.45}
+	\definecolor{tinselectionclr}{gray}{.6}
+	\definecolor{tindisplayclr}{gray}{.95}
+}{}%
+\ifthenelse{\equal{#1}{contrast}}{%
+	\definecolor{tinclrctrl}{RGB}{66,177,221}
+	\definecolor{tinclrctrldraw}{RGB}{66,177,221}
+	\definecolor{tinsecondaryclr}{RGB}{45,139,175}
+}{}%
+}
+\TINsetcolors{\tin@colors}
+
+%% Defaults
+\def\tin@corners{1pt}
+\def\tin@minwidth{6ex}
+
+%% TikZ
+\tikzset{
+	tinbase/.style={
+		white,
+		rectangle,
+		rounded corners=\tin@corners,
+		text height=1.5ex,
+		text depth=.25ex,
+		inner sep=3pt,
+		font=\sffamily\bfseries,
+	},
+	tinshadow/.style={
+		drop shadow={
+			fill=black,
+			opacity=0.75,
+			shadow xshift=0.15ex,
+			shadow yshift=-0.15ex,
+		}
+	},
+	tinbutton/.style={
+		tinbase,
+		draw=black,
+		fill=tinbtnbg,
+		text=tinbtnfg,
+		minimum width=\tin@minwidth,
+	},
+	tinkey/.style={
+		tinbutton,
+	},
+	tinctrl/.style={
+		black,
+		draw=tinclrctrldraw,
+		fill=tinclrctrl,
+		text=black,
+	},
+	tinhalf/.style={
+		tinbase,
+		draw=black,
+		fill=tinbtnbg,
+		text=tinbtnfg,
+		minimum width=4ex,
+		anchor=south west,
+	},
+	tinsecondary/.style={
+		tinsecondaryclr,
+		yshift=-.3ex,
+		font=\sffamily\bfseries\fontsize{1ex}{0}\selectfont,
+		text depth=0pt,
+	},
+}
+
+\ifthenelse{\boolean{tin@flat}}{}{%
+	\tikzset{
+		tinkey/.append style={
+			tinshadow
+		},
+		tinhalf/.append style={
+			tinshadow
+		},
+	}
+}
+\ifthenelse{\boolean{tin@keepBorder}}{%
+	\tikzset{
+		tinctrl/.append style={
+			draw=black,
+		},
+	}
+}{}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%              Helper macros              %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\tin@button}[3][]{%
+	\node at (0,0) [tinbutton,label={[tinsecondary]above:#3},#1] (key) {#2\strut};
+}
+\newcommand{\tin@key}[3][]{%
+	\node at (0,0) [tinkey,label={[tinsecondary]above:#3},#1] (key) {#2\strut};
+}
+\newcommand{\tin@sec}[2][]{%
+	\node at (0,0) [tinsecondary,label={above:#2},#1] (sec) {\strut};
+}
+
+%% Main macros
+\newcommand{\TINbutton}[3][]{\tikz[baseline=(key.base)]{\tin@button[#1]{#2}{#3}}\xspace}
+
+\newcommand{\TINkey}[3][]{\tikz[baseline=(key.base)]{\tin@key[#1]{#2}{#3}}\xspace}
+
+\newcommand{\TINright}[3][]{\tikz[baseline=(shape.base)]{%
+	\node at (0,0)[tinbase,minimum width=4ex,anchor=south west] (shape) {\phantom{#2}};
+	\begin{scope}[x=(shape.south east),y=(shape.north west)]
+		\fill[black] (0,0) {[rounded corners=\tin@corners] -- ++(1,0) -- ++(0,1)} -- ++(-1,0) -- cycle {};
+	\end{scope}
+	\node at (0,0) [tinhalf,label={[tinsecondary]above:#3}] (key) {\small #2\strut};
+}\xspace}
+\newcommand{\TINleft}[3][]{\tikz[baseline=(shape.base)]{%
+	\node at (0,0)[tinbase,minimum width=4ex,anchor=south west] (shape) {\phantom{#2}};
+	\begin{scope}[x=(shape.south east),y=(shape.north west)]
+		\fill[black] (1,1) {[rounded corners=\tin@corners] -- ++(-1,0) -- ++(0,-1)} -- ++(1,0) -- cycle {};
+	\end{scope}
+	\node at (0,0) [tinhalf,label={[tinsecondary]above:#3}] (key) {\small #2\strut};
+}\xspace}
+
+\newcommand{\tin@double}[2]{#1\hspace{-.5ex}#2}
+\newcommand{\TINdouble}[4]{\tin@double{\TINleft{#1}{#2}}{\TINright{#3}{#4}}}
+\def\tin@two#1#2{\tin@double{\csname TIN#1\endcsname}{\csname TIN#2\endcsname}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%         General key macros             %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\TIN}{{\sffamily TI-{\LARGE$n$}\textbf{spire \textcolor{tinsecondaryclr}{\textit{CX}}}}\xspace}
+
+\newcommand{\TINsmall}[2][]{\TINkey[inner sep=1pt,minimum size=2ex,#1]{\small #2}{}}
+\newcommand{\TINbig}[2][]{\TINkey[minimum width={\tin@minwidth*1.5},#1]{#2}{}}
+
+\newcommand{\TINwhite}[2]{\TINkey[black,fill=white,text=black]{#1}{#2}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%         Specific key macros            %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\TINesc}{\@ifstar\@@TINesc\@TINesc}
+\newcommand{\@TINesc}{\TINkey{esc}{$\Lsh$}}
+\newcommand{\@@TINesc}{\TINkey{esc}{}}
+\newcommand{\TINscratch}{\@ifstar\@@TINscratch\@TINscratch}
+\newcommand{\@TINscratch}{\TINkey{\tin@calculator}{save}}
+\newcommand{\@@TINscratch}{\TINkey{\tin@calculator}{}}
+\newcommand{\TINtab}{\TINkey{tab}{}}
+
+\newcommand{\TINon}{\@ifstar\@@TINon\@TINon}
+\newcommand{\@TINon}{\TINkey{\tin@house\xspace on}{off}}
+\newcommand{\@@TINon}{\TINkey{\tin@house\xspace on}{}}
+\newcommand{\TINdoc}{\@ifstar\@@TINdoc\@TINdoc}
+\newcommand{\@TINdoc}{\TINkey{doc \tin@caret}{+ page}}
+\newcommand{\@@TINdoc}{\TINkey{doc \tin@caret}{}}
+\newcommand{\TINmenu}{\@ifstar\@@TINmenu\@TINmenu}
+\newcommand{\@TINmenu}{\TINkey{menu}{\tin@menu}}
+\newcommand{\@@TINmenu}{\TINkey{menu}{}}
+
+
+\newcommand{\TINctrl}{\TINkey[tinctrl]{ctrl}{}}
+\newcommand{\TINshift}{\@ifstar\@@TINshift\@TINshift}
+\newcommand{\@TINshift}{\TINkey{\tin@uparrow\xspace shift}{CAPS}}
+\newcommand{\@@TINshift}{\TINkey{\tin@uparrow\xspace shift}{}}
+\newcommand{\TINvar}{\@ifstar\@@TINvar\@TINvar}
+\newcommand{\@TINvar}{\TINkey{var}{sto$\rightarrow$}}
+\newcommand{\@@TINvar}{\TINkey{var}{}}
+\newcommand{\TINdel}{\@ifstar\@@TINdel\@TINdel}
+\newcommand{\@TINdel}{\TINkey{$\underleftarrow{\text{del}}$}{clear}}
+\newcommand{\@@TINdel}{\TINkey{$\underleftarrow{\text{del}}$}{}}
+
+
+\newcommand{\TINpowsq}{\@ifstar\@@TINpowsq\@TINpowsq}
+\newcommand{\@TINpowsq}{\tin@two{pow}{sq}}
+\newcommand{\@@TINpowsq}{\tin@double{\TINpow*}{\TINsq*}}
+\newcommand{\TINpow}{\@ifstar\@@TINpow\@TINpow}
+\newcommand{\@TINpow}{\TINleft{$\wedge$}{$\sqrt[n]{x}$}}
+\newcommand{\@@TINpow}{\TINleft{$\wedge$}{}}
+\newcommand{\TINsq}{\@ifstar\@@TINsq\@TINsq}
+\newcommand{\@TINsq}{\TINright{$x^2$}{$\sqrt{\ }$}}
+\newcommand{\@@TINsq}{\TINright{$x^2$}{}}
+
+\newcommand{\TINeqtrig}{\@ifstar\@@TINeqtrig\@TINeqtrig}
+\newcommand{\@TINeqtrig}{\tin@two{eq}{trig}}
+\newcommand{\@@TINeqtrig}{\tin@double{\TINeq*}{\TINtrig*}}
+\newcommand{\TINeq}{\@ifstar\@@TINeq\@TINeq}
+\newcommand{\@TINeq}{\TINleft{=}{$|\neq\geq$\tin@rcaret[.5]}}
+\newcommand{\@@TINeq}{\TINleft{=}{}}
+\newcommand{\TINtrig}{\@ifstar\@@TINtrig\@TINtrig}
+\newcommand{\@TINtrig}{\TINright{trig}{\textcircled{?}}}
+\newcommand{\@@TINtrig}{\TINright{trig}{}}
+
+\newcommand{\TINextenx}{\@ifstar\@@TINextenx\@TINextenx}
+\newcommand{\@TINextenx}{\tin@two{ex}{tenx}}
+\newcommand{\@@TINextenx}{\tin@double{\TINex*}{\TINtenx*}}
+\newcommand{\TINex}{\@ifstar\@@TINex\@TINex}
+\newcommand{\@TINex}{\TINleft{$e^x$}{ln}}
+\newcommand{\@@TINex}{\TINleft{$e^x$}{}}
+\newcommand{\TINtenx}{\@ifstar\@@TINtenx\@TINtenx}
+\newcommand{\@TINtenx}{\TINright{$10^x$}{log}}
+\newcommand{\@@TINtenx}{\TINright{$10^x$}{}}
+
+\newcommand{\TINlbrrbr}{\@ifstar\@@TINlbrrbr\@TINlbrrbr}
+\newcommand{\@TINlbrrbr}{\tin@two{lbr}{rbr}}
+\newcommand{\@@TINlbrrbr}{\tin@double{\TINlbr*}{\TINrbr*}}
+\newcommand{\TINlbr}{\@ifstar\@@TINlbr\@TINlbr}
+\newcommand{\@TINlbr}{\TINleft{(}{[\ ]}}
+\newcommand{\@@TINlbr}{\TINleft{(}{}}
+\newcommand{\TINrbr}{\@ifstar\@@TINrbr\@TINrbr}
+\newcommand{\@TINrbr}{\TINright{)}{\{\ \}}}
+\newcommand{\@@TINrbr}{\TINright{)}{}}
+
+\newcommand{\TINtimesdiv}{\@ifstar\@@TINtimesdiv\@TINtimesdiv}
+\newcommand{\@TINtimesdiv}{\tin@two{times}{div}}
+\newcommand{\@@TINtimesdiv}{\tin@double{\TINtimes*}{\TINdiv*}}
+\newcommand{\TINtimes}{\@ifstar\@@TINtimes\@TINtimes}
+\newcommand{\@TINtimes}{\TINleft{$\times$}{''\tin@box''}}
+\newcommand{\@@TINtimes}{\TINleft{$\times$}{}}
+\newcommand{\TINdiv}{\@ifstar\@@TINdiv\@TINdiv}
+\newcommand{\@TINdiv}{\TINright{$\div$}{$\frac{\blacksquare}{\square}$}}
+\newcommand{\@@TINdiv}{\TINright{$\div$}{}}
+
+\newcommand{\TINslib}{\@ifstar\@@TINslib\@TINslib}
+\newcommand{\@TINslib}{\tin@two{s}{lib}}
+\newcommand{\@@TINslib}{\tin@double{\TINs*}{\TINlib*}}
+\newcommand{\TINs}{\@ifstar\@@TINs\@TINs}
+\newcommand{\@TINs}{\TINleft{\tin@s}{:=}}
+\newcommand{\@@TINs}{\TINleft{\tin@s}{}}
+\newcommand{\TINlib}{\@ifstar\@@TINlib\@TINlib}
+\newcommand{\@TINlib}{\TINright{$\square$}{$\infty\beta^\circ$}}
+\newcommand{\@@TINlib}{\TINright{$\square$}{}}
+
+\newcommand{\TINplusminus}{\@ifstar\@@TINplusminus\@TINplusminus}
+\newcommand{\@TINplusminus}{\tin@two{plus}{minus}}
+\newcommand{\@@TINplusminus}{\tin@double{\TINplus*}{\TINminus*}}
+\newcommand{\TINplus}{\@ifstar\@@TINplus\@TINplus}
+\newcommand{\@TINplus}{\TINleft{+}{$\square$}}
+\newcommand{\@@TINplus}{\TINleft{+}{}}
+\newcommand{\TINminus}{\@ifstar\@@TINminus\@TINminus}
+\newcommand{\@TINminus}{\TINright{-}{$\square$}}
+\newcommand{\@@TINminus}{\TINright{-}{}}
+
+
+\newcommand{\TINnum}[1]{\TINwhite{\textbf{#1}}{}}
+\newcommand{\TINdot}{\@ifstar\@@TINdot\@TINdot}
+\newcommand{\@TINdot}{\TINwhite{.}{capture}}
+\newcommand{\@@TINdot}{\TINwhite{.}{}}
+\newcommand{\TINneg}{\@ifstar\@@TINneg\@TINneg}
+\newcommand{\@TINneg}{\TINwhite{(-)}{ans}}
+\newcommand{\@@TINneg}{\TINwhite{(-)}{}}
+
+
+\newcommand{\TINenter}{\@ifstar\@@TINenter\@TINenter}
+\newcommand{\@TINenter}{\TINkey[minimum width=8ex]{enter}{$\approx$}}
+\newcommand{\@@TINenter}{\TINkey[minimum width=8ex]{enter}{}}
+
+
+\newcommand{\TINx}{\TINsmall[black,fill=white,text=black]{X}}
+\newcommand{\TINy}{\TINsmall[black,fill=white,text=black]{Y}}
+\newcommand{\TINz}{\TINsmall[black,fill=white,text=black]{Z}}
+\newcommand{\TINspace}{\TINsmall[minimum width=\tin@minwidth]{\textvisiblespace}}
+
+\newcommand{\TINletter}[1]{\TINsmall{#1}}
+
+\newcommand{\TINee}{\TINsmall{EE}}
+\newcommand{\TINpi}{\TINsmall{$\pi$\tin@rcaret}}
+\newcommand{\TINcomma}{\TINsmall{,}}
+
+\newcommand{\TINsymbols}{\TINsmall{?!\tin@rcaret}}
+\newcommand{\TINflag}{\TINsmall{F}}
+\newcommand{\TINnewline}{\TINsmall{\rotatebox[origin=c]{180}{$\Rsh$}}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%        Combinations of keys            %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\TINcombo}[2]{#1+\ #2}
+\newcommand{\TINfollow}[2]{#1$\rightarrow$\ #2}
+\newcommand{\TINword}[1]{\foreach \l in {#1}{\TINletter{\l}}}
+
+\newcommand{\TINnumpad}{%
+\begin{tabular}{ccc}
+	\TINnum{1}{} & \TINnum{2}{} & \TINnum{3}{} \\
+	\TINwhite{4}{} & \TINwhite{5}{} & \TINwhite{6}{} \\
+	\TINwhite{7}{} & \TINwhite{8}{} & \TINwhite{9}{} \\
+	\TINwhite{0}{} & \TINdot & \TINneg \\
+\end{tabular}}
+\newcommand{\TINkeyboard}{
+	\begin{tabular}{ccccccc}
+		\TINletter{a} & \TINletter{b} & \TINletter{c} & \TINletter{d} & \TINletter{e} & \TINletter{f} & \TINletter{g} \\
+		\TINletter{h} & \TINletter{i} & \TINletter{j} & \TINletter{k} & \TINletter{l} & \TINletter{m} & \TINletter{n} \\
+		\TINletter{o} & \TINletter{p} & \TINletter{q} & \TINletter{r} & \TINletter{s} & \TINletter{t} & \TINletter{u} \\
+		\TINletter{v} & \TINletter{w} & \TINx & \TINy & \TINz & \multicolumn{2}{c}{\TINspace}
+	\end{tabular}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                 Symbols                 %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand\tin@calculator{\tikz[baseline,thick,scale={\f@size/11pt},]{
+		\draw (0,0) -- (.05,.3); \draw (.05,0) -- (.1,.3);
+		\draw (.1,0) -- (.3,0) -- (.35,.3) -- (.15,.3) -- cycle {};
+		\foreach \x/\y in {.1/.05,.11/.1,.12/.15}{
+			\draw (\x,\y) -- +(.2,0);}
+		\foreach \x in {.19,.26}{
+			\draw (\x,.15) -- +(-.03,-.15);}
+}}
+\newcommand\tin@house{\tikz[baseline,thick,scale={\f@size/11pt}]{
+		\draw (.05,0) -- (.15,0) -- (.15,.1) -- (.25,.1) -- (.25,0) -- (.35,0) -- (.35,.15) -- (.4,.15) -- (.35,.19) -- (.35,.3) -- (.29,.3) -- (.29,.23) -- (.2,.3) -- (0,.15) -- (.05,.15) -- (.05,0);
+}}
+\newcommand\tin@caret[1][.8]{\tikz[baseline,scale=#1,x=1em,y=1ex,]{
+		\fill (0,1) -- (1,1) -- (.5,0) -- (0,1);
+}}
+\newcommand\tin@rcaret[1][.7]{\tikz[baseline,scale=#1,x=1ex,y=1em,]{
+		\fill (0,0) -- (1,.5) -- (0,1) -- (0,0);
+}}
+\newcommand\tin@box[1][1.1]{\tikz[baseline,scale=#1,x=1ex,y=1ex,]{
+		\draw (0,0) -- (1,0) -- (1,1) -- (0,1) -- (0,0);
+}}
+\newcommand\tin@fbox[1][1.1]{\tikz[baseline,scale=#1,x=1ex,y=1ex,]{
+		\fill (0,0) -- (1,0) -- (1,1) -- (0,1) -- (0,0);
+}}
+\newcommand\tin@menu[1][\f@size/11pt]{\tikz[baseline,scale=#1,]{
+		\draw[thick] (0,0) rectangle (.5,.4);
+		\foreach \y in {.1,.2,.3}{
+			\draw (.1,\y) -- +(.3,0);}
+}}
+\newcommand\tin@uparrow{$\Uparrow$}
+\newcommand\tin@s{$|\square|$}
+\newcommand\tin@input[2][1]{\tikz[baseline=(input.base),scale=#1,x=1ex,y=1em]{
+		\node[gray,thick,draw,fill=white,text=black,rectangle,minimum width=8,minimum height=1.5,align=left,text width=8ex,inner sep=1pt] (input) {#2\strut};
+}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%          Display and menu              %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newlength{\tin@menuWidth}
+\def\tin@mWidth{}
+\def\tin@mHeight{}
+\newlength{\tin@wLine}
+
+\newenvironment{tindisplay}{\begin{tikzpicture}
+	\fill[gray!10,draw=black] (0,0) rectangle (8,6);
+}{\end{tikzpicture}}
+
+\newenvironment{tinwindow}[1]{\setlength{\tin@wLine}{-2em}\settowidth{\tin@menuWidth}{#1}\begin{tikzpicture}[x=1ex,y=1em,framed,background rectangle/.style={fill=tindisplayclr,draw=black},tight background]
+	\pgfmathparse{\the\tin@menuWidth+2ex}\edef\tin@mWidth{\pgfmathresult}
+	\node at (0,0) [anchor=north west,black,fill=black,rectangle,text=white,font=\sffamily,minimum width=\tin@mWidth,inner sep=1pt] {#1\strut};
+}{\addtolength{\tin@wLine}{.5em}\node at (0,\the\tin@wLine) [anchor=north west] {};
+\end{tikzpicture}}
+
+\newcommand\TINwfield[2][]{%
+	\node at (12,\the\tin@wLine) [anchor=north west,gray,thick,draw,fill=white,text=black,label={left:#2},minimum width=8ex,minimum height=1.5em,align=left,text width=8ex] {#1};\addtolength{\tin@wLine}{-2em}
+}
+\def\TINwbtns#1#2{%
+	\draw[gray,ultra thick] (.5em,{\the\tin@wLine}) -- ({\tin@mWidth-.5em},{\the\tin@wLine});
+	\node at (10,{\the\tin@wLine-.5em}) [anchor=north west,gray,thick,draw,fill=white,text=black,minimum width=4ex,minimum height=1.5em] (ok) {#1};
+	\node[anchor=north west,gray,thick,draw,fill=white,text=black,minimum width=4ex,right of=ok,xshift=2.5ex,minimum width=3ex,minimum height=1.5em] (cancel) {#2};
+	\addtolength{\tin@wLine}{-2em}
+}
+\newenvironment{tinwin}{\starttinwin}{}
+\def\starttinwin#1\end{\begingroup\setlength\fboxsep{0pt}\sffamily
+\colorbox{tindisplayclr}{\begin{tabular}{|rlc|}\hline
+	#1
+\hline\end{tabular}}\endgroup\end}
+\def\TINwtitle#1{\rowcolor{black}\multicolumn{3}{l}{\color{white}#1} \tabularnewline}
+\def\TINwinput#1#2{#1 & \tin@input{#2} & \tabularnewline}
+
+\newcommand\texttin{\@ifstar\@@texttin\@texttin}
+\newcommand{\@texttin}[1]{\textsf{\setlength{\fboxsep}{0pt}\colorbox{tindisplayclr}{\color{black}#1}}}
+\newcommand{\@@texttin}[1]{\textsf{\setlength{\fboxsep}{0pt}\colorbox{tinselectionclr}{\color{white}#1}}}
+
+\newenvironment{tinmenu}{\starttinmenu}{}
+\def\starttinmenu#1\end{\begingroup\setlength\fboxsep{0pt}
+	\colorbox{tindisplayclr}{\begin{tabular}{|lr|}\hline
+		#1
+\hline\end{tabular}}\endgroup\end}
+
+% https://tex.stackexchange.com/questions/26360/how-to-color-the-font-of-a-single-row-in-a-table
+\def\tin@rowTextClr{\color{black}}
+\def\tin@endrow{\gdef\tin@rowTextClr{\color{black}}}
+\def\TINselected{\rowcolor{tinselectionclr}\gdef\tin@rowTextClr{\color{white}}}
+
+\def\TINmenuitem{\@ifstar\@@TINmenuitem\@TINmenuitem}
+\def\@TINmenuitem#1{\tin@rowTextClr\textsf{#1} & \tin@endrow\tabularnewline}
+\def\@@TINmenuitem#1{\tin@rowTextClr\textsf{#1} & \tin@rowTextClr\tin@rcaret\tin@endrow\tabularnewline}
